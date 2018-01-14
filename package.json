@@ -1,0 +1,19 @@
+{
+  "name": "@orisomething/no-export-duplications",
+  "version": "0.0.1",
+  "main": "index.js",
+  "license": "MIT",
+  "repository": "git@github.com:oriSomething/no-export-duplications.git",
+  "bin": {
+    "no-export-duplications": "bin/cli.js"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "babylon": "^6.18.0",
+    "chalk": "^2.3.0",
+    "glob": "^7.1.2",
+    "yargs": "^10.1.1"
+  }
+}
