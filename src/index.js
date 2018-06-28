@@ -1,116 +1,67 @@
 /* eslint-disable no-console */
 "use strict";
 
-const BABYLON_PLUGINS = [
-  "asyncGenerators",
-  "bigInt",
-  "classProperties",
-  "dynamicImport",
-  "flow",
-  "jsx",
-  "numericSeparator",
-  "objectRestSpread",
-  "optionalCatchBinding",
-  "throwExpressions",
-  "typescript",
-];
-
 const fs = require("fs");
 const path = require("path");
 const glob = require("glob");
-const babylon = require("babylon");
 const chalk = require("chalk");
+const parseJs = require("./parse-js");
+const parseTs = require("./parse-ts");
 
 function main(rootUri = process.cwd(), options = {}) {
   const whitelist = new Set(options.whitelist);
-  const rootUriGlopPath = rootUri + (/\/$/.test(rootUri) ? "" : "/") + "**/*.js";
+  const rootUriGlopPath = rootUri + (/\/$/.test(rootUri) ? "" : "/") + "**/*.{js,mjs,ts,tsx}";
   const matches = glob.sync(rootUriGlopPath);
   const usedExports = new Map();
   const duplicationsExports = new Map();
 
-  const push = (val, uri, node) => {
-    if (whitelist.has(val)) {
-      return;
-    }
+  /**
+   * @param {Map.<string,{ uri: string, line: number }>}  exportsData
+   * @param {string} uri
+   */
+  const push = (exportsData, uri) => {
+    for (let [name, meta] of exportsData.entries()) {
+      if (whitelist.has(name)) continue;
 
-    if (usedExports.has(val)) {
-      if (duplicationsExports.has(val)) {
-        duplicationsExports.get(val).push(uri);
+      const data = {
+        uri,
+        line: meta.line,
+      };
+
+      if (usedExports.has(name)) {
+        if (duplicationsExports.has(name)) {
+          duplicationsExports.get(name).push(uri);
+        } else {
+          duplicationsExports.set(name, [usedExports.get(name), data]);
+        }
       } else {
-        duplicationsExports.set(val, [usedExports.get(val), { uri, node }]);
+        usedExports.set(name, data);
       }
-    } else {
-      usedExports.set(val, { uri, node });
     }
   };
 
   matches.filter(filterUri).forEach(uri => {
     const code = fs.readFileSync(uri).toString();
 
-    // eslint-disable-next-line
-    const fileNameWithoutExtension = path.basename(uri, path.extname(uri));
-
-    const absoluteUri = path.resolve(uri);
+    // const fileNameWithoutExtension = path.basename(uri, path.extname(uri));
+    // const absoluteUri = path.resolve(uri);
 
     try {
-      var file = babylon.parse(code, {
-        sourceType: "module",
-        plugins: BABYLON_PLUGINS,
-      });
+      switch (path.extname(uri)) {
+        case ".js":
+        case ".mjs":
+          push(parseJs({ code, uri }), uri);
+          break;
+
+        case ".ts":
+        case ".tsx":
+          push(parseTs({ code, uri }), uri);
+          break;
+      }
     } catch (e) {
       console.error(`Parsing error of file "${uri}"`);
       throw e;
     }
-
-    const namedExports = file.program.body.filter(node => node.type === "ExportNamedDeclaration");
-
-    // NOTE: "export {···} from '···'"
-    namedExports
-      .filter(node => node.declaration == null)
-      .map(node => node.specifiers)
-      .forEach(specifiers => {
-        specifiers
-          // We case only about renamed exports
-          .filter(node => node.local.name !== node.exported.name)
-          .map(exportSpecifier => exportSpecifier.exported)
-          .forEach(node => {
-            switch (node.type) {
-              case "Identifier":
-                push(node.name, absoluteUri, node);
-                break;
-
-              // Yet supported
-              default:
-                throw new Error(`${node.type} isn't supported`);
-            }
-          });
-      });
-
-    // NOTE: All other kind of exports
-    namedExports
-      .filter(node => node.declaration != null)
-      .map(node => node.declaration)
-      .forEach(node => {
-        switch (node.type) {
-          case "VariableDeclaration":
-            node.declarations.forEach(node => push(node.id.name, absoluteUri, node));
-            break;
-          case "FunctionDeclaration":
-          case "ClassDeclaration":
-            push(node.id.name, absoluteUri, node);
-            break;
-
-          // Types (Flow only)
-          case "TypeAlias":
-          case "InterfaceDeclaration":
-            push(node.id.name, absoluteUri, node);
-            break;
-
-          // Yet supported
-          default:
-            throw new Error(`${node.type} isn't supported`);
-        }
-      });
   });
 
   if (duplicationsExports.size === 0) {
@@ -118,8 +69,8 @@ function main(rootUri = process.cwd(), options = {}) {
   } else {
     const duplications = [...duplicationsExports].map(([identifier, duplications]) => {
       const filesList = duplications
-        .map(({ uri, node }) => {
-          return chalk`    {gray.underline ${uri}:${node.loc.start.line}}`;
+        .map(({ uri, line }) => {
+          return chalk`    {gray.underline ${uri}:${line}}`;
         })
         .join("\n");
 
@@ -132,7 +83,10 @@ function main(rootUri = process.cwd(), options = {}) {
 
 function filterUri(uri) {
   return !(
-    uri.endsWith(".test.js") ||
+    /\.test\.(js|mjs|ts|tsx)$/.test(uri) ||
+    /\.spec\.(js|mjs|ts|tsx)$/.test(uri) ||
+    /\.d\.ts$/.test(uri) ||
+    /\.flow$/.test(uri) ||
     uri.includes("node_modules") ||
     uri.includes("flow-typed") ||
     uri.includes("/dist/") ||
