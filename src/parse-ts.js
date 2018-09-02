@@ -56,7 +56,12 @@ function parseTs({ code, uri }) {
           break;
 
         case ts.SyntaxKind.ExportDeclaration:
-          if (statement.exportClause != null && Array.isArray(statement.exportClause.elements)) {
+          if (
+            statement.exportClause != null &&
+            Array.isArray(statement.exportClause.elements) &&
+            // If `statement.moduleSpecifier == null` it means it's `export { Something } from "other module"` which isn't duplicated symbol
+            statement.moduleSpecifier == null
+          ) {
             for (let element of statement.exportClause.elements) {
               push(element.name.escapedText, statement);
             }
