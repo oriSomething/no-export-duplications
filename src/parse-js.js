@@ -12,10 +12,9 @@ const BABYLON_PLUGINS = [
   "objectRestSpread",
   "optionalCatchBinding",
   "throwExpressions",
-  "typescript",
 ];
 
-const babylon = require("babylon");
+const babylon = require("@babel/parser");
 
 /**
  * @param   {{ code: string, uri: string }} args
