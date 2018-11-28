@@ -12,9 +12,24 @@ function parseTs({ code, uri }) {
    * @type {Map.<string,{ line: number }>}
    */
   const exportsData = new Map();
+  /**
+   * Because `--isolatedModules` flag we need to manually re-export bindings. So we ignore them
+   * @type {Set.<string>}
+   */
+  const ignoredExportsOfImports = new Set();
+
   const file = ts.createSourceFile(uri, code, ts.ScriptTarget.ESNext, /*setParentNodes */ false);
 
+  /**
+   *
+   * @param {string} val
+   * @param {import("typescript").Statement} node
+   */
   const push = (val, node) => {
+    if (ignoredExportsOfImports.has(val)) {
+      return;
+    }
+
     const loc = file.getLineAndCharacterOfPosition(node.pos);
 
     exportsData.set(val, {
@@ -26,6 +41,24 @@ function parseTs({ code, uri }) {
   /**
    * Process
    */
+
+  file.statements.forEach(statement => {
+    if (statement.kind === ts.SyntaxKind.ImportDeclaration) {
+      if (
+        statement.importClause != null &&
+        statement.importClause.namedBindings != null &&
+        Array.isArray(statement.importClause.namedBindings.elements)
+      ) {
+        statement.importClause.namedBindings.elements.forEach(element => {
+          if (element.propertyName != null) {
+            ignoredExportsOfImports.add(element.propertyName.escapedText);
+          } else {
+            ignoredExportsOfImports.add(element.name.escapedText);
+          }
+        });
+      }
+    }
+  });
 
   file.statements
     .filter(s => {
