@@ -1,14 +1,26 @@
 /* eslint-disable no-console */
 "use strict";
 
+/**
+ * @typedef {Object} Options
+ * @property {Array.<string>} [whitelist]
+ * @property {Array.<string>} [ignorepath]
+ */
+
 const fs = require("fs");
 const path = require("path");
 const glob = require("glob");
+const minimatch = require("minimatch");
 const chalk = require("chalk");
 const parseJs = require("./parse-js");
 const parseTs = require("./parse-ts");
 
+/**
+ * @param {string} [rootUri]
+ * @param {Options} options
+ */
 function main(rootUri = process.cwd(), options = {}) {
+  const ignorepath = (options.ignorepath || []).map(uri => path.resolve(rootUri, uri));
   const whitelist = new Set(options.whitelist);
   const rootUriGlopPath = rootUri + (/\/$/.test(rootUri) ? "" : "/") + "**/*.{js,mjs,ts,tsx}";
   const matches = glob.sync(rootUriGlopPath);
@@ -40,7 +52,7 @@ function main(rootUri = process.cwd(), options = {}) {
     }
   };
 
-  matches.filter(filterUri).forEach(uri => {
+  matches.filter(filterUri.bind(undefined, ignorepath)).forEach(uri => {
     const code = fs.readFileSync(uri).toString();
 
     // const fileNameWithoutExtension = path.basename(uri, path.extname(uri));
@@ -81,7 +93,12 @@ function main(rootUri = process.cwd(), options = {}) {
   }
 }
 
-function filterUri(uri) {
+/**
+ * @param {Array.<string>} ignorepath
+ * @param {string} uri
+ * @returns {boolean}
+ */
+function filterUri(ignorepath, uri) {
   return !(
     /\.test\.(js|mjs|ts|tsx)$/.test(uri) ||
     /\.spec\.(js|mjs|ts|tsx)$/.test(uri) ||
@@ -91,6 +108,7 @@ function filterUri(uri) {
     uri.includes("flow-typed") ||
     uri.includes("/dist/") ||
     uri.includes("/build/") ||
+    ignorepath.some(u => minimatch(uri, u)) ||
     false
   );
 }
