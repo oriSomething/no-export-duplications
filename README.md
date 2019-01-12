@@ -20,8 +20,8 @@ You can add path as an argument when you want to check duplications in another p
 
 ### Notes
 
-- Support JavaScript files including Flow (Current compiler `babylon@6.18.0`)
-- Support TypeScript files (Current complier is `typescript@2.9.2`)
+- Support JavaScript files including Flow (Current compiler `@babel/parser@7.1.6`)
+- Support TypeScript files (Current complier is `typescript@3.1.6`)
 - List of globs that always ignored:
   - `.test.{js,mjs,ts,tsx}`
   - `.spec.{js,mjs,ts,tsx}`
