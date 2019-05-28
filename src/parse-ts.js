@@ -37,7 +37,7 @@ function parseTs({ code, uri }) {
    * @param {string|__String} val
    * @param {Statement} node
    */
-  const push = (val, node) => {
+  function push(val, node) {
     if (ignoredExportsOfImports.has(toString(val))) {
       return;
     }
@@ -48,7 +48,7 @@ function parseTs({ code, uri }) {
       // In TS compiler, lines start at `0`
       line: loc.line + 1,
     });
-  };
+  }
 
   /**
    * Process
@@ -92,10 +92,28 @@ function parseTs({ code, uri }) {
         case ts.SyntaxKind.EnumDeclaration:
         case ts.SyntaxKind.FunctionDeclaration:
         case ts.SyntaxKind.InterfaceDeclaration:
+          {
+            const s = /** @type {ClassDeclaration|EnumDeclaration|FunctionDeclaration|InterfaceDeclaration} */ (statement);
+
+            if (s.name != null) {
+              push(s.name.escapedText, statement);
+            }
+          }
+          break;
+
         case ts.SyntaxKind.TypeAliasDeclaration:
           {
-            const s = /** @type {ClassDeclaration | EnumDeclaration | FunctionDeclaration | InterfaceDeclaration | TypeAliasDeclaration} */ (statement);
-            if (s.name != null) {
+            const s = /** @type {TypeAliasDeclaration} */ (statement);
+
+            /**
+             * Preventing calling duplication to export type aliases such as:
+             * `export type SomeType = import("···").SomeType`
+             */
+            if (
+              !ts.isImportTypeNode(s.type) ||
+              !ts.isIdentifier(s.type.qualifier) ||
+              s.type.qualifier.escapedText !== s.name.escapedText
+            ) {
               push(s.name.escapedText, statement);
             }
           }
