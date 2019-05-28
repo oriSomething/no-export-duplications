@@ -1,7 +1,20 @@
+// @ts-check
 /* eslint-disable no-console */
 "use strict";
 
 const ts = require("typescript");
+
+/** @typedef {import("typescript").__String} __String
+/** @typedef {import("typescript").ClassDeclaration} ClassDeclaration
+/** @typedef {import("typescript").EnumDeclaration} EnumDeclaration
+/** @typedef {import("typescript").ExportDeclaration} ExportDeclaration
+/** @typedef {import("typescript").FunctionDeclaration} FunctionDeclaration
+/** @typedef {import("typescript").Identifier} Identifier
+/** @typedef {import("typescript").InterfaceDeclaration} InterfaceDeclaration
+/** @typedef {import("typescript").Statement} Statement
+/** @typedef {import("typescript").SyntaxKind} SyntaxKind
+/** @typedef {import("typescript").TypeAliasDeclaration} TypeAliasDeclaration
+/** @typedef {import("typescript").VariableStatement} VariableStatement
 
 /**
  * @param   {{ code: string, uri: string }} args
@@ -21,18 +34,17 @@ function parseTs({ code, uri }) {
   const file = ts.createSourceFile(uri, code, ts.ScriptTarget.ESNext, /*setParentNodes */ false);
 
   /**
-   *
-   * @param {string} val
-   * @param {import("typescript").Statement} node
+   * @param {string|__String} val
+   * @param {Statement} node
    */
   const push = (val, node) => {
-    if (ignoredExportsOfImports.has(val)) {
+    if (ignoredExportsOfImports.has(toString(val))) {
       return;
     }
 
     const loc = file.getLineAndCharacterOfPosition(node.pos);
 
-    exportsData.set(val, {
+    exportsData.set(toString(val), {
       // In TS compiler, lines start at `0`
       line: loc.line + 1,
     });
@@ -43,17 +55,19 @@ function parseTs({ code, uri }) {
    */
 
   file.statements.forEach(statement => {
-    if (statement.kind === ts.SyntaxKind.ImportDeclaration) {
+    // if (statement.kind === ts.SyntaxKind.ImportDeclaration) {
+    if (ts.isImportDeclaration(statement)) {
       if (
         statement.importClause != null &&
         statement.importClause.namedBindings != null &&
-        Array.isArray(statement.importClause.namedBindings.elements)
+        // Was: Array.isArray(statement.importClause.namedBindings.elements)
+        ts.isNamedImports(statement.importClause.namedBindings)
       ) {
         statement.importClause.namedBindings.elements.forEach(element => {
           if (element.propertyName != null) {
-            ignoredExportsOfImports.add(element.propertyName.escapedText);
+            ignoredExportsOfImports.add(toString(element.propertyName.escapedText));
           } else {
-            ignoredExportsOfImports.add(element.name.escapedText);
+            ignoredExportsOfImports.add(toString(element.name.escapedText));
           }
         });
       }
@@ -79,26 +93,40 @@ function parseTs({ code, uri }) {
         case ts.SyntaxKind.FunctionDeclaration:
         case ts.SyntaxKind.InterfaceDeclaration:
         case ts.SyntaxKind.TypeAliasDeclaration:
-          push(statement.name.escapedText, statement);
+          {
+            const s = /** @type {ClassDeclaration | EnumDeclaration | FunctionDeclaration | InterfaceDeclaration | TypeAliasDeclaration} */ (statement);
+            if (s.name != null) {
+              push(s.name.escapedText, statement);
+            }
+          }
           break;
 
         case ts.SyntaxKind.VariableStatement:
-          for (let declaration of statement.declarationList.declarations) {
-            push(declaration.name.escapedText, statement);
+          {
+            const s = /** @type {VariableStatement} */ (statement);
+            for (let declaration of s.declarationList.declarations) {
+              if (ts.isIdentifier(declaration.name)) {
+                push(declaration.name.escapedText, statement);
+              }
+            }
           }
           break;
 
         case ts.SyntaxKind.ExportDeclaration:
-          if (
-            statement.exportClause != null &&
-            Array.isArray(statement.exportClause.elements) &&
-            // If `statement.moduleSpecifier == null` it means it's `export { Something } from "other module"` which isn't duplicated symbol
-            statement.moduleSpecifier == null
-          ) {
-            for (let element of statement.exportClause.elements) {
-              push(element.name.escapedText, statement);
+          {
+            const s = /** @type {ExportDeclaration} */ (statement);
+            if (
+              s.exportClause != null &&
+              Array.isArray(s.exportClause.elements) &&
+              // If `s.moduleSpecifier == null` it means it's `export { Something } from "other module"` which isn't duplicated symbol
+              s.moduleSpecifier == null
+            ) {
+              for (let element of s.exportClause.elements) {
+                push(element.name.escapedText, statement);
+              }
             }
           }
+
           break;
 
         default:
@@ -112,10 +140,10 @@ function parseTs({ code, uri }) {
 
 module.exports = parseTs;
 
+//#region Helpers
 /**
- * Helpers
+ * @param {SyntaxKind} kind
  */
-
 function getNodeName(kind) {
   for (var k of Object.keys(ts.SyntaxKind)) {
     if (ts.SyntaxKind[k] === kind) {
@@ -125,3 +153,11 @@ function getNodeName(kind) {
 
   return kind;
 }
+
+/**
+ * @param {string|__String} str
+ */
+function toString(str) {
+  return /** @type {string} */ (str);
+}
+//#endregion
