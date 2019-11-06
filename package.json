@@ -11,11 +11,11 @@
     "start": "node src/index.js"
   },
   "dependencies": {
-    "@babel/parser": "^7.6.4",
-    "chalk": "^2.4.2",
-    "glob": "^7.1.5",
+    "@babel/parser": "^7.7.7",
+    "chalk": "^3.0.0",
+    "glob": "^7.1.6",
     "minimatch": "^3.0.4",
-    "typescript": "^3.6.4",
-    "yargs": "^14.2.0"
+    "typescript": "^3.7.3",
+    "yargs": "^15.0.2"
   }
 }
