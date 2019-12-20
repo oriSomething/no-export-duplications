@@ -12,7 +12,19 @@
   "parserOptions": {
     "ecmaVersion": 2018
   },
-  "rules": {},
+
+  "rules": {
+    "no-console": 1,
+    "no-unused-vars": [
+      2,
+      {
+        "args": "all",
+        "argsIgnorePattern": "^__",
+        "caughtErrors": "none",
+        "ignoreRestSiblings": true
+      }
+    ]
+  },
 
   "overrides": [
     {

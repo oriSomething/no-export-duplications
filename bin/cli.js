@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 "use strict";
 
 const yargs = require("yargs");
@@ -16,7 +17,13 @@ const argv = yargs
   .describe("i", "Ignore paths")
   .array("i").argv;
 
-require("../src/index.js")(argv._[0], {
-  whitelist: argv.w,
-  ignorepath: argv.i,
+const rootUri = argv._[0] || process.cwd();
+/** @type {*} */
+const whitelist = argv.w;
+/** @type {*} */
+const ignorepath = argv.i;
+
+require("../src/cli")(rootUri, {
+  whitelist,
+  ignorepath,
 });
