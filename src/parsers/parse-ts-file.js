@@ -164,8 +164,11 @@ function extractExports(file) {
       if (
         // ts.isNamedExports(statement.exportClause) &&
         statement.exportClause != null &&
+        statement.exportClause.elements != null &&
         Array.isArray(statement.exportClause.elements) &&
         // If `s.moduleSpecifier == null` it means it's `export { Something } from "other module"` which isn't duplicated symbol
+        // TODO: export { A as B } from "..."
+
         statement.moduleSpecifier == null
       ) {
         for (let element of statement.exportClause.elements) {

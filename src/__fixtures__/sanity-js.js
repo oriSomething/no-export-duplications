@@ -27,3 +27,8 @@ export * from "Blah";
 export { X };
 
 var NOT_EXPORTED = 1;
+
+import type { ImportedType } from "./non-exist-files";
+export { ImportedType };
+
+export type { ExportedType } from "./non-exist-files";

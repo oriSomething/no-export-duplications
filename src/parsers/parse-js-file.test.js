@@ -17,38 +17,43 @@ describe("parseJsFile()", function() {
       uri: testUri,
     });
 
-    expect(result.imports).toEqual(
-      expect.arrayContaining([
-        {
-          fileDirname,
-          from: "./non-exist-files",
-          isDefault: true,
-          isRenamed: false,
-          name: "DEF",
-        },
-        {
-          fileDirname,
-          from: "./non-exist-files",
-          isDefault: false,
-          isRenamed: false,
-          name: "X",
-        },
-        {
-          fileDirname,
-          from: "./non-exist-files",
-          isDefault: false,
-          isRenamed: false,
-          name: "Y",
-        },
-        {
-          fileDirname,
-          from: "./non-exist-files",
-          isDefault: false,
-          isRenamed: true,
-          name: "ZZZ",
-        },
-      ]),
-    );
+    expect(result.imports).toEqual([
+      {
+        fileDirname,
+        from: "./non-exist-files",
+        isDefault: true,
+        isRenamed: false,
+        name: "DEF",
+      },
+      {
+        fileDirname,
+        from: "./non-exist-files",
+        isDefault: false,
+        isRenamed: false,
+        name: "X",
+      },
+      {
+        fileDirname,
+        from: "./non-exist-files",
+        isDefault: false,
+        isRenamed: false,
+        name: "Y",
+      },
+      {
+        fileDirname,
+        from: "./non-exist-files",
+        isDefault: false,
+        isRenamed: true,
+        name: "ZZZ",
+      },
+      {
+        fileDirname,
+        from: "./non-exist-files",
+        isDefault: false,
+        isRenamed: false,
+        name: "ImportedType",
+      },
+    ]);
 
     expect(result.exports).toEqual(
       new Map([
@@ -61,6 +66,7 @@ describe("parseJsFile()", function() {
         ["Type", { line: 20, isPrivate: false }],
         ["Interface", { line: 22, isPrivate: false }],
         ["X", { line: 27, isPrivate: false }],
+        ["ImportedType", { line: 32, isPrivate: false }],
       ]),
     );
   });

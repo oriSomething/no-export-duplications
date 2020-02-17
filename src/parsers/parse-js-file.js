@@ -139,6 +139,9 @@ function extractExports(file, __uri) {
         if (t.isExportNamedDeclaration(node)) {
           for (let specifier of node.specifiers) {
             if (t.isExportSpecifier(specifier)) {
+              // TODO: "export { A as B } from '···'"
+              if (node.source != null) continue;
+
               push(specifier.exported.name, specifier.exported, hasPrivateJsDoc(node.leadingComments));
               continue;
             }

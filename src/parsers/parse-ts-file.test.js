@@ -17,38 +17,43 @@ describe("parseTsFile()", function() {
       uri: testUri,
     });
 
-    expect(result.imports).toEqual(
-      expect.arrayContaining([
-        {
-          fileDirname,
-          from: "./non-exist-files",
-          isDefault: true,
-          isRenamed: false,
-          name: "DEF",
-        },
-        {
-          fileDirname,
-          from: "./non-exist-files",
-          isDefault: false,
-          isRenamed: false,
-          name: "X",
-        },
-        {
-          fileDirname,
-          from: "./non-exist-files",
-          isDefault: false,
-          isRenamed: false,
-          name: "Y",
-        },
-        {
-          fileDirname,
-          from: "./non-exist-files",
-          isDefault: false,
-          isRenamed: true,
-          name: "ZZZ",
-        },
-      ]),
-    );
+    expect(result.imports).toEqual([
+      {
+        fileDirname,
+        from: "./non-exist-files",
+        isDefault: true,
+        isRenamed: false,
+        name: "DEF",
+      },
+      {
+        fileDirname,
+        from: "./non-exist-files",
+        isDefault: false,
+        isRenamed: false,
+        name: "X",
+      },
+      {
+        fileDirname,
+        from: "./non-exist-files",
+        isDefault: false,
+        isRenamed: false,
+        name: "Y",
+      },
+      {
+        fileDirname,
+        from: "./non-exist-files",
+        isDefault: false,
+        isRenamed: true,
+        name: "ZZZ",
+      },
+      {
+        fileDirname,
+        from: "./non-exist-files",
+        isDefault: false,
+        isRenamed: false,
+        name: "ImportedType",
+      },
+    ]);
 
     expect(result.exports).toEqual(
       new Map([
@@ -60,6 +65,7 @@ describe("parseTsFile()", function() {
         ["Type", { line: 21, isPrivate: false }],
         ["Interface", { line: 23, isPrivate: false }],
         ["X", { line: 28, isPrivate: false }],
+        ["ImportedType", { line: 34, isPrivate: false }],
       ]),
     );
   });

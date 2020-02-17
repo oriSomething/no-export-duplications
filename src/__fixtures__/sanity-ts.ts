@@ -28,3 +28,10 @@ export * from "Blah";
 export { X };
 
 var NOT_EXPORTED = 1;
+
+// @ts-ignore
+import type { ImportedType } from "./non-exist-files";
+export { ImportedType };
+
+// @ts-ignore
+export type { ExportedType } from "./non-exist-files";
