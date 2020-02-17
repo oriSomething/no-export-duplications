@@ -26,7 +26,6 @@ interface ExportData {
 type ExportsData = Map<string, ExportData>;
 
 //#region Options
-
 interface CheckOptions {
   whitelist?: string[];
   // ignorePrivateOutsidePackage: boolean;

@@ -11,11 +11,10 @@ const filterUri = require("../parsers/filter-uri");
 //#endregion
 
 /**
- *
- * @param {string}  [rootUri]
+ * @param {string}  rootUri
  * @param {AnalyzeOptions} [options]
  */
-function analyze(rootUri = process.cwd(), options = {}) {
+function analyze(rootUri, options = {}) {
   const ignorepath = (options.ignorepath || []).map(uri => path.resolve(rootUri, uri));
   const rootUriGlopPath = rootUri + (/\/$/.test(rootUri) ? "" : "/") + "**/*.{js,mjs,ts,tsx}";
   const matches = glob.sync(rootUriGlopPath);

@@ -3,7 +3,6 @@
 
 //#region Types
 /**
- *
  * @typedef  {Object} Data
  * @property {string} uri
  * @property {number} line
