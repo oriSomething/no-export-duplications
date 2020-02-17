@@ -18,7 +18,7 @@
     "chalk": "^3.0.0",
     "glob": "^7.1.6",
     "minimatch": "^3.0.4",
-    "typescript": "^3.7.5",
+    "typescript": "3.8.1-rc",
     "yargs": "^15.1.0"
   },
   "devDependencies": {
