@@ -1,6 +1,6 @@
 {
   "name": "@orisomething/no-export-duplications",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "main": "index.js",
   "license": "MIT",
   "repository": "git@github.com:oriSomething/no-export-duplications.git",
